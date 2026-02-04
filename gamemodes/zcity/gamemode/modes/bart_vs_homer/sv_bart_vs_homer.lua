@@ -7,6 +7,7 @@ MODE.start_time = 8
 
 util.AddNetworkString("bvh_roundend")
 util.AddNetworkString("barthomer_start")
+util.AddNetworkString("bvh_roundstart")
 
 local function IsHomer(ply)
     local n = ply.PlayerClassName or ""
@@ -72,6 +73,8 @@ function MODE:RoundStart()
         ply:Freeze(false)
     end
     self._started = CurTime()
+    net.Start("bvh_roundstart")
+    net.Broadcast()
     if not (self.saved and self.saved.homer_entindex) then
         local all = player.GetHumans()
         local candidates = {}
