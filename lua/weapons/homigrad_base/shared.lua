@@ -291,7 +291,7 @@ function SWEP:IsZoom()
 		(self:GetButtstockAttack() - CurTime() < -1) and 
 		(self:GetOwner():IsPlayer() and self:KeyDown(IN_ATTACK2) and not self:KeyDown(IN_SPEED)) and
 		!(self:IsSprinting() and !IsValid(owner.FakeRagdoll)) and
-		((IsValid(owner.FakeRagdoll) and self:KeyDown(IN_USE)) or
+		((IsValid(owner.FakeRagdoll) and (self:KeyDown(IN_USE) or hg.RagdollCombatInUse(owner))) or
 		(owner:IsOnGround() or owner:InVehicle())) and 
 		not owner.suiciding and !(owner.organism and (owner.organism.larm and !self:IsPistolHoldType())
 		and owner.organism.rarm and (owner.organism.larm > 0.99 or owner.organism.rarm > 0.99))
@@ -1387,7 +1387,14 @@ hg.postureFunctions2 = {
 	end,
 	[2] = function(self,ply)
 		local add = (hg.GunPositions[ply] and hg.GunPositions[ply][2]) or 0
-		self.AdditionalPosPreLerp[3] = self.AdditionalPosPreLerp[3] - 7 - add
+		self.AdditionalPosPreLerp[3] = self.AdditionalPosPreLerp[3] - 6 - add
+		if self:IsPistolHoldType() then return end
+		self.AdditionalPosPreLerp[1] = self.AdditionalPosPreLerp[1] + 2
+		self.AdditionalPosPreLerp[2] = self.AdditionalPosPreLerp[2] + 1
+
+		self.AdditionalAngPreLerp[1] = self.AdditionalAngPreLerp[1] - 2
+		--self.AdditionalAngPreLerp[1] = self.AdditionalAngPreLerp[1] - 4
+		--self.AdditionalAngPreLerp[2] = self.AdditionalAngPreLerp[2] + 7
 	end,
 	[3] = function(self,ply,force)
 		if self:IsZoom() and not force then return end
@@ -1427,9 +1434,10 @@ hg.postureFunctions2 = {
 			self.AdditionalPosPreLerp[2] = self.AdditionalPosPreLerp[2] - 2
 			self.AdditionalPosPreLerp[3] = self.AdditionalPosPreLerp[3] + 6 - add
 		else
-			self.AdditionalPosPreLerp[1] = self.AdditionalPosPreLerp[1] - 2
+			self.AdditionalPosPreLerp[1] = self.AdditionalPosPreLerp[1] - -5
 			self.AdditionalPosPreLerp[2] = self.AdditionalPosPreLerp[2] + -2
 			self.AdditionalPosPreLerp[3] = self.AdditionalPosPreLerp[3] + 6 - add
+			self.AdditionalAngPreLerp[1] = self.AdditionalAngPreLerp[1] + 12
 		end
 	end,
 	[9] = function(self,ply)
@@ -1438,10 +1446,15 @@ hg.postureFunctions2 = {
 		self.AdditionalPosPreLerp[3] = self.AdditionalPosPreLerp[3] + 3
 		if self:IsPistolHoldType() then
 			self.AdditionalPosPreLerp[2] = self.AdditionalPosPreLerp[2] + 14 - add
-			self.AdditionalPosPreLerp[1] = self.AdditionalPosPreLerp[1] + 1
+			self.AdditionalPosPreLerp[1] = self.AdditionalPosPreLerp[1] - 4
+			self.AdditionalAngPreLerp[3] = self.AdditionalAngPreLerp[3] - 30
 		else
-			self.AdditionalPosPreLerp[2] = self.AdditionalPosPreLerp[2] + 12 - add
-			self.AdditionalPosPreLerp[1] = self.AdditionalPosPreLerp[1] - 2
+			self.AdditionalPosPreLerp[2] = self.AdditionalPosPreLerp[2] + 14 - add
+			self.AdditionalPosPreLerp[1] = self.AdditionalPosPreLerp[1] + 3
+
+			self.AdditionalAngPreLerp[3] = self.AdditionalAngPreLerp[3] - 10
+			self.AdditionalAngPreLerp[1] = self.AdditionalAngPreLerp[1] + 2
+			self.AdditionalAngPreLerp[2] = self.AdditionalAngPreLerp[2] - 10
 		end
 	end,
 }
@@ -1847,6 +1860,9 @@ end
 
 function SWEP:InUse()
 	local ply = self:GetOwner()
+	
+	if !IsValid(ply) then return false end
+	
 	local ent = IsValid(ply.FakeRagdoll) and ply.FakeRagdoll or ply
 	local org = ply.organism
 
@@ -1856,7 +1872,7 @@ function SWEP:InUse()
 		return false
 	end
 
-	return ( (not ply.InVehicle || !ply:InVehicle()) && self:KeyDown(IN_USE)) || (ply.InVehicle && ply:InVehicle() && not self:KeyDown(IN_USE)) || (self.reload and self.reload > 0) || (IsValid(ply.OldRagdoll))
+	return ( ((not ply.InVehicle || !ply:InVehicle()) and !hg.RagdollCombatInUse(ply)) && self:KeyDown(IN_USE)) || ((ply.InVehicle && ply:InVehicle() or hg.RagdollCombatInUse(ply) or ent == ply) && not self:KeyDown(IN_USE)) || (self.reload and self.reload > 0) || (IsValid(ply.OldRagdoll))
 end
 
 local veczero = Vector(0, 0, 0)
