@@ -8,7 +8,7 @@ SWEP.Category = "Weapons - Pistols"
 SWEP.Slot = 2
 SWEP.SlotPos = 10
 SWEP.ViewModel = ""
-SWEP.WorldModel = "models/weapons/zcity/w_mr96.mdl"
+SWEP.WorldModel = "models/weapons/w_357.mdl"
 SWEP.WorldModelFake = "models/weapons/c_pist_mr96.mdl"
 
 SWEP.FakePos = Vector(-8, 2.82, 5.4)
@@ -16,8 +16,8 @@ SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.AttachmentPos = Vector(-2,-1.6,-23.1)
 SWEP.AttachmentAng = Angle(0,0,90)
 SWEP.MagIndex = 53
-//MagazineSwap
---PrintBones(Entity(1):GetActiveWeapon():GetWM())
+
+
 SWEP.FakeVPShouldUseHand = true
 SWEP.AnimList = {
 	["idle"] = "idle1",
@@ -171,7 +171,7 @@ SWEP.Primary.Damage = 40
 SWEP.Primary.Spread = 0
 SWEP.Primary.Force = 30
 SWEP.Primary.Sound = {"zcitysnd/sound/weapons/revolver/revolver_fp.wav", 75, 90, 100}
-SWEP.SupressedSound = {"weapons/tfa_ins2/usp_tactical/fp_suppressed1.wav", 55, 90, 100}
+SWEP.SupressedSound = {"weapons/tfa_ins2/usp_tactical/fp_suppressed1.wav", 65, 90, 100}
 SWEP.Primary.SoundEmpty = {"zcitysnd/sound/weapons/revolver/handling/revolver_empty.wav", 75, 100, 105, CHAN_WEAPON, 2}
 SWEP.Primary.Wait = 0.2
 SWEP.ReloadTime = 5
@@ -287,6 +287,7 @@ if SERVER then
 
 		if not wep.Drum then return end
 
+		wep:AttachAnim()
 		if wep.Drum[val] != 0 then
 			local value = -(-wep.Drum[val])
 			wep.Drum[val] = 0
@@ -309,10 +310,12 @@ if SERVER then
 
 	concommand.Add("hg_rolldrum",function(ply, cmd, args)
 		local wep = ply:GetActiveWeapon()
-		if IsValid(wep) and wep.Drum then
+		if IsValid(wep) and wep.Drum and (ply.DrumCD or 0) < CurTime() then
+			wep:AttachAnim()
 			wep:ShiftDrum(math.random(6))
 			ply:EmitSound("weapons/357/357_spin1.wav")
 			wep.Rolled = true
+			ply.DrumCD = CurTime() + 0.5
 		end
 	end)
 end
@@ -347,7 +350,7 @@ end
 
 function SWEP:Unload()
 	if CLIENT then return end
-	
+
 	if self.SendDrum then
 		for i = 1,#self.Drum do
 			self.Drum[i] = 0

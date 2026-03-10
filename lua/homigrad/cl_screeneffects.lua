@@ -1,7 +1,7 @@
 local function DrawSunEffect()
 	local sun = util.GetSunInfo()
 	if not sun then return end
-	if not sun.obstruction == 0 or sun.obstruction == 0 then return end
+	if not sun.obstruction == 0 or sun.obstruction == 0 or !sun.direction then return end
 	local sunpos = EyePos() + sun.direction * 1024 * 4
 	local scrpos = sunpos:ToScreen()
 	local dot = (sun.direction:Dot(EyeVector()) - 0.8) * 5
@@ -55,8 +55,6 @@ local tab = {
 	["$pp_colour_colour"] = 1
 }
 
-local WitnessLerp = 0
-
 --local potatopc = GetConVar("hg_potatopc") or CreateClientConVar("hg_potatopc", "0", true, false, "enable this if you are noob", 0, 1)
 local hook_Run = hook.Run
 hook.Add("RenderScreenspaceEffects", "homigrad", function()
@@ -71,7 +69,7 @@ hook.Add("RenderScreenspaceEffects", "homigrad", function()
 		addtiveLayer["brightness"] = Lerp(weight, 0, layer["brightness"] or 0)
 		--end
 	end
-	
+
 	//DrawBloom(addtiveLayer.bloom_darken, addtiveLayer.bloom_mul, addtiveLayer.bloom_sizex, addtiveLayer.bloom_sizey, addtiveLayer.bloom_passes, addtiveLayer.bloom_colormul, addtiveLayer.bloom_colorr, addtiveLayer.bloom_colorg, addtiveLayer.bloom_colorb)
 	//DrawSharpen(addtiveLayer.sharpen, addtiveLayer.sharpen_dist)
 	//if not brain_motionblur then DrawMotionBlur(addtiveLayer.blur_addalpha, addtiveLayer.blur_drawalpha, addtiveLayer.blur_delay) end
@@ -79,15 +77,11 @@ hook.Add("RenderScreenspaceEffects", "homigrad", function()
 	tab["$pp_colour_brightness"] = addtiveLayer.brightness
 	DrawColorModify(tab)
 
-	if WitnessLerp > 0 then
-		surface.SetMaterial(vignetteMat)
-		surface.SetDrawColor(0, 0, 0, math.Clamp(WitnessLerp * 255, 0, 255))
-		surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
-	end
-
 	hook_Run("Post Pre Post Processing")
 
 	hook_Run("Post Post Processing")
+
+	hook_Run("Post Post Pre Post Processing")
 end)
 
 local postprs = hg.postprocess
@@ -230,12 +224,14 @@ end )]]
 --that one furry game
 
 
-local painMat = Material( "effects/shaders/zb_grain" )
-local noiseMat = Material( "effects/shaders/zb_grainwhite" )
-local vignetteMat = Material( "effects/shaders/zb_vignette" )
-local assimilationMat = Material( "effects/shaders/zb_assimilation" )
-local coldMat = Material( "effects/shaders/zb_colda" )
-local grainMat = Material( "effects/shaders/zb_grain2" )
+local painMat = Material("effects/shaders/zb_grain")
+local noiseMat = Material("effects/shaders/zb_grainwhite")
+local vignetteMat = Material("effects/shaders/zb_vignette")
+local assimilationMat = Material("effects/shaders/zb_assimilation")
+local coldMat = Material("effects/shaders/zb_colda")
+local grainMat = Material("effects/shaders/zb_grain2")
+local heatMat = Material("effects/shaders/zb_heat")
+local blindMat = Material("effects/shaders/zb_blind")
 
 local PainLerp = 0
 local O2Lerp = 0
@@ -262,7 +258,6 @@ local function stopthings()
 	assimilatedLerp = 0
 	tempLerp = 36.6
 	consciousnessLerp = 1
-	WitnessLerp = 0
 
 	lply.tinnitus = 0
 	
@@ -327,6 +322,9 @@ local stations = {
 
 local choosera = 1
 local tempolerp = 0
+local lerpblood = 0
+local addtime = CurTime()
+local hurtoverlay = Material("zcity/neurotrauma/damageOverlay.png", "smooth")
 hook.Add("Post Post Processing", "ItHurts", function()
 	local spect = IsValid(lply:GetNWEntity("spect")) and lply:GetNWEntity("spect")
 	
@@ -341,6 +339,40 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	if not organism.brain then stopthings() return end
 	local org = organism
 	
+	if org.blindness or amtflashed >= 0.8 then
+		local blindness = ((org.blindness and math.Round(org.blindness) == 0) or amtflashed >= 0.8) and 0 or (org.blindness)
+		render.UpdateScreenEffectTexture()
+		render.UpdateFullScreenDepthTexture()
+		
+		blindMat:SetFloat("$c0_x", 5)
+		blindMat:SetFloat("$c0_y", CurTime())
+		blindMat:SetFloat("$c0_z", math.Round(blindness))
+	
+		render.SetMaterial(blindMat)
+		render.DrawScreenQuad()
+	end
+
+	if (org.consciousness < 0.7) then
+		lerpblood = LerpFT(0.01, lerpblood or 0, math.Clamp((0.7 - org.consciousness) * 5, 0, 1) * 255)
+		local lowblood = (3600 - (org.blood or 5000)) / 600
+
+		addtime = addtime + FrameTime() / 6
+		local amt = (math.cos(addtime) + math.sin(addtime * 3) + math.sin(addtime * 2)) / 90
+		local amt2 = (math.sin(addtime) + math.cos(addtime * 5) + math.sin(addtime * 6)) / 90
+		local mat = Matrix({
+			{1 - amt, amt, 0, -amt2 / 2},
+			{amt2, 1 - amt2, 0, -amt / 2},
+			{0, 0, 1, 0},
+			{0, 0, 0, 1},
+		})
+		hurtoverlay:SetMatrix("$basetexturetransform", mat)
+		surface.SetMaterial(hurtoverlay)
+		surface.SetDrawColor(0, 0, 0, lerpblood)
+		surface.DrawTexturedRect(-ScrW() * 2.0, -ScrH() * 2.0, ScrW() * 5, ScrH() * 5)
+		//ViewPunch(Angle(-amt * 1, amt2 * 1,0))
+		//ViewPunch2(Angle(-amt * 1, amt2 * 1,0))
+	end
+
 	if !IsValid(PainStation) or PainStation:GetState() != GMOD_CHANNEL_PLAYING then
 		sound.PlayFile("sound/zbattle/pain_beat.ogg", "noblock noplay", function(station)
 			if IsValid(station) then
@@ -362,16 +394,30 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	local brain = org.brain or 0
 	O2Lerp = LerpFT(0.01, O2Lerp, (30 - o2) * (org.otrub and 2 or 10) + (brain * 100) * (org.otrub and 1 or 5))
 
+	tempLerp = LerpFT(0.01, tempLerp, org.temperature)
+
+	if tempLerp > 38 then
+		local heat = tempLerp - 38
+
+		render.UpdateScreenEffectTexture()
+
+		heatMat:SetFloat("$c0_x", -CurTime() * 0.25)//math.sin(CurTime() * 0.1) * CurTime() * 0.01) //time
+		heatMat:SetFloat("$c0_y", 0.06 * heat)//(math.sin(CurTime()) + 1) * 2) //intensity (strict)
+		heatMat:SetFloat("$c2_x", (math.sin(CurTime()) - 2) * heat)
+
+		render.SetMaterial(heatMat)
+		render.DrawScreenQuad()
+	end
+
 	local pain = org.pain or 0
 	pain = math.max(pain - 15, 0)
 	local shock = (org.shock or 0) * 1 + (1 - org.consciousness) * 40
-	shockLerp = LerpFT(0.01, shockLerp or 0, shock)
+	shockLerp = LerpFT(0.01, shockLerp or 0, shock + (lply.suiciding and math.max(0, org.heartbeat - 90) or 0))
 	consciousnessLerp = LerpFT(org.consciousness < (consciousnessLerp or 1) and 1 or 0.01, consciousnessLerp or 1, org.consciousness)
 	-- local immobilization = org.immobilization
 	PainLerp = LerpFT(0.05, PainLerp, math.max(pain * (org.otrub and 0.2 or 1), 0))
 	assimilatedLerp = LerpFT(0.01, assimilatedLerp, (org.assimilated or 0))
-	tempLerp = LerpFT(0.01, tempLerp, org.temperature)
-	
+
 	if assimilatedLerp > 0.001 then
 		render.UpdateScreenEffectTexture()
 
@@ -572,6 +618,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		lobotomy_index = 0
 	end
 	
+
 	if O2Lerp > 1 then
 		render.UpdateScreenEffectTexture()
 		
@@ -647,4 +694,44 @@ hook.Add("Player Spawn", "ItDoesntNow", function(ply)
 	if ply != lply then return end
 
 	stopthings()
+end)
+
+local function removeflash()
+	if IsValid(lply.blindflash) then
+		lply.blindflash:Remove()
+	end
+end
+
+hook.Add("PreDrawOpaqueRenderables", "renderblindnessflash", function()
+	local spect = IsValid(lply:GetNWEntity("spect")) and lply:GetNWEntity("spect")
+	
+	if !lply:Alive() and !IsValid(spect) then removeflash() return end
+	if !lply:Alive() and viewmode != 1 then removeflash() return end
+
+	local organism = lply:Alive() and lply.organism or (IsValid(spect) and spect.organism)
+	if not organism or isbool(organism) then return end
+
+	if !(organism.blindness or (amtflashed or 0) >= 0.8) then removeflash() return end
+	local blindness = ((organism.blindness and math.Round(organism.blindness) == 0) or amtflashed >= 0.8) and 0 or (organism.blindness)
+
+	local eyesmode = math.Round(blindness)
+	
+	local view = render.GetViewSetup(true)
+	
+	if not IsValid(lply.blindflash) then
+		lply.blindflash = ProjectedTexture()
+		lply.blindflash:SetTexture("effects/flashlight001")
+		lply.blindflash:SetEnableShadows(false)
+		lply.blindflash:SetConstantAttenuation(.1)
+	end
+	
+	local Ang = view.angles
+	Ang[2] = Ang[2] + (eyesmode == 2 and 90 or eyesmode == 1 and -90 or 0)
+	Ang[1] = eyesmode == 0 and Ang[1] or 0
+	lply.blindflash:SetFarZ(40)
+	lply.blindflash:SetFOV(160)
+	lply.blindflash:SetBrightness(1)
+	lply.blindflash:SetPos(view.origin)
+	lply.blindflash:SetAngles(Ang)
+	lply.blindflash:Update()
 end)

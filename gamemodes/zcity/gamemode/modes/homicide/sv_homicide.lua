@@ -14,8 +14,14 @@ MODE.OverrideSpawn = true
 MODE.LootSpawn = true
 MODE.LootOnTime = true
 
-MODE.Chance = 0.05
+MODE.Chance = 0.2 -- this is mostly unused
 MODE.LootDivTime = 500
+
+function MODE:SetupChances()
+	for name, tbl in pairs(MODE.Types) do
+		zb.ModesChances[name] = zb.ModesChances[name] or tbl.Chance
+	end
+end
 
 MODE.LootTable = {
 	{40, {
@@ -248,7 +254,8 @@ util.AddNetworkString("hmcd_announce_traitor_lose")
 MODE.Type = MODE.Type or "standard"
 MODE.Types = MODE.Types or {}
 MODE.Types.standard = {
-	ChanceFunction = function() return (zb.GetWorldSize() < ZBATTLE_BIGMAP) and 0.4 or 0 end,
+	Chance = 0.2,
+	ChanceFunction = function() return (zb.GetWorldSize() < ZBATTLE_BIGMAP) and (zb.ModesChances["standard"] or zb.modes["hmcd"].Types.standard.Chance) or 0 end,
 	LootTable = MODE.LootTableStandard,
 	Messages = {
 		[3] = "Everyone died.",
@@ -323,7 +330,8 @@ MODE.Types.standard = {
 	end
 }
 MODE.Types.wildwest = {
-	ChanceFunction = function() return (zb.GetWorldSize() < ZBATTLE_BIGMAP) and 0.1 or 0 end,
+	Chance = 0.05,
+	ChanceFunction = function() return (zb.GetWorldSize() < ZBATTLE_BIGMAP) and (zb.ModesChances["wildwest"] or zb.modes["hmcd"].Types.wildwest.Chance) or 0 end,
 	LootTable = MODE.LootTableStandard,
 	Messages = {
 		[3] = "The dead silence fills the empty city...",
@@ -404,7 +412,7 @@ MODE.Types.wildwest = {
 					"weapon_doublebarrel_short"
 				}
 
-				local weapon = v:Give(table.Random(guns), true)
+				local weapon = v:Give(guns[math.random(#guns)], true)
 				weapon:SetClip1(weapon:GetMaxClip1())
 			end
 
@@ -458,7 +466,8 @@ MODE.Types.wildwest = {
 }
 
 MODE.Types.gunfreezone = {
-	ChanceFunction = function() return (zb.GetWorldSize() < ZBATTLE_BIGMAP) and 0.1 or 0 end,
+	Chance = 0.05,
+	ChanceFunction = function() return (zb.GetWorldSize() < ZBATTLE_BIGMAP) and (zb.ModesChances["gunfreezone"] or zb.modes["hmcd"].Types.gunfreezone.Chance) or 0 end,
 	LootTable = MODE.LootTableStandard,
 	Messages = {
 		[3] = "Everyone died.",
@@ -533,7 +542,8 @@ MODE.Types.gunfreezone = {
 }
 
 MODE.Types.soe = {
-	ChanceFunction = function() return (zb.GetWorldSize() >= ZBATTLE_BIGMAP) and 0.4 or 0 end,
+	Chance = 0.2,
+	ChanceFunction = function() return (zb.GetWorldSize() >= ZBATTLE_BIGMAP) and (zb.ModesChances["soe"] or zb.modes["hmcd"].Types.soe.Chance) or 0 end,
 	LootTable = MODE.LootTable,
 	Messages = {
 		[3] = "Everyone died.",
@@ -625,8 +635,6 @@ local modes = {
 	"wildwest",
 	"gunfreezone",
 }
-
-local setmode = ConVarExists("homicide_setmode") and GetConVar("homicide_setmode") or CreateConVar( "homicide_setmode", "random", FCVAR_NONE, "sets hmcd mode" )
 
 util.AddNetworkString("HMCD_RoundStart")
 
@@ -1010,12 +1018,15 @@ function MODE:SpawnForce(teamtype, count)
     return spawned
 end
 
+local function tbl_Random(tbl) -- when you can't even say
+	return tbl[math.random(#tbl)] -- my name
+end
 function MODE:EquipSWAT(ply, index)
     ply:SetPlayerClass("swat")
     
     local classes = {
-        [1] = function() return table.Random({"weapon_m4a1", "weapon_hk416"}) end, --;; Team Leader
-        [2] = function() ply:Give("weapon_ram") return table.Random({"weapon_remington870", "weapon_m590a1"}) end, --;; Breacher
+        [1] = function() return tbl_Random({"weapon_m4a1", "weapon_hk416"}) end, --;; Team Leader
+        [2] = function() ply:Give("weapon_ram") return tbl_Random({"weapon_remington870", "weapon_m590a1"}) end, --;; Breacher
         [3] = function() return "weapon_mp5" end, --;; Pointman
         [4] = function() return "weapon_sr25" end, --;; Marksman
         [5] = function()
@@ -1044,7 +1055,7 @@ function MODE:EquipSWAT(ply, index)
 	local gun = ply:Give("weapon_taser")
 	ply:GiveAmmo(gun:GetMaxClip1() * 3, gun:GetPrimaryAmmoType(),true)
 
-	hg.AddArmor(ply, {"helmet6", "vest8", table.Random({"mask1", "mask2", "nightvision1"})})
+	hg.AddArmor(ply, {"helmet6", "vest8", tbl_Random({"mask1", "mask2", "nightvision1"})})
 
     local inv = ply:GetNetVar("Inventory") or {}
     inv["Weapons"] = inv["Weapons"] or {}
@@ -1374,6 +1385,14 @@ function MODE:EndRound()
 				hook.Run("ZB_TraitorWinOrNot", traitor, winner)
 			else
 				PrintMessage(HUD_PRINTTALK, self.Types[self.Type].Messages[winner]..(winner == 0 and (" killed.") or ""))
+				for _, traitor in ipairs(traitors) do
+					net.Start("hmcd_announce_traitor_lose")
+						net.WriteEntity(traitor)
+						net.WriteBool(traitor:Alive())
+					net.Broadcast()
+
+					hook.Run("ZB_TraitorWinOrNot", traitor, winner)
+				end
 			end
 		end
 	end
