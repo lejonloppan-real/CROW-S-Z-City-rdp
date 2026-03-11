@@ -245,6 +245,7 @@ if CLIENT then
 
         if IsValid(owner) then
             if not self.cycling then
+<<<<<<< HEAD
                 local timing
                 if self.hitPauseDelayUntil and CurTime() >= self.hitPauseDelayUntil and not self.hitPauseUntil then
                     self.hitPauseUntil = CurTime() + (self.HitPauseDuration or 0.2)
@@ -282,6 +283,11 @@ if CLIENT then
                     timing = self.reverseanim and (1 - timing) or timing
                     WorldModel:SetCycle(timing)
                 end
+=======
+                local timing = (1 - math.Clamp((self.animtime - CurTime()) / self.animspeed, 0, 1))
+                timing = self.reverseanim and (1 - timing) or timing
+                WorldModel:SetCycle(timing)
+>>>>>>> b25199bb2f8cb3545a05a8ead26aa4fb6d115e74
                 --PrintTable( WorldModel:GetSequenceList() )
                 
                 if self.callback and timing == ((not self.reverseanim) and 1 or 0) then
@@ -916,6 +922,7 @@ function SWEP:PlayEffects(trace, attacktype)
         self.AttackHitPlayed = true
 
         owner:EmitSound(self.AttackHit,50)
+<<<<<<< HEAD
     end
 end
 
@@ -964,6 +971,8 @@ function SWEP:HandleHitPause()
         net.SendPVS(self:GetPos())
     else
         self:TriggerHitPause()
+=======
+>>>>>>> b25199bb2f8cb3545a05a8ead26aa4fb6d115e74
     end
 end
 
@@ -1224,6 +1233,7 @@ function SWEP:CustomThink()
             if !shouldhit then
                 goto meleeskip1
             end
+<<<<<<< HEAD
             if self:ShouldHitPause(1) then
                 self:HandleHitPause()
             end
@@ -1232,6 +1242,13 @@ function SWEP:CustomThink()
                 self:AddDecal()
             end
 
+=======
+
+            if SERVER and self:IsEntSoft(ent) and self.HitEnts[#self.HitEnts] ~= ent then
+                self:AddDecal()
+            end
+
+>>>>>>> b25199bb2f8cb3545a05a8ead26aa4fb6d115e74
             if CLIENT then goto meleeskip1 end
 
             ent:PrecacheGibs()
@@ -1454,10 +1471,13 @@ function SWEP:PrimaryAttack()
     self.HitEnts = nil
     self.FirstAttackTick = false
     self.AttackHitPlayed = false
+<<<<<<< HEAD
     self.hitPauseTriggered = nil
     self.hitPauseDelayUntil = nil
     self.hitPauseUntil = nil
     self.hitPauseDone = nil
+=======
+>>>>>>> b25199bb2f8cb3545a05a8ead26aa4fb6d115e74
     self:PlayAnim("attack", self.AnimTime1 / mul,false,nil,false,false)
     self:SetAttackType(1)
     self:SetLastAttack(CurTime() + self.AttackTime / mul)
@@ -1562,10 +1582,13 @@ function SWEP:SecondaryAttack(override)
     self.HitEnts = nil
     self.FirstAttackTick = false
     self.AttackHitPlayed = false
+<<<<<<< HEAD
     self.hitPauseTriggered = nil
     self.hitPauseDelayUntil = nil
     self.hitPauseUntil = nil
     self.hitPauseDone = nil
+=======
+>>>>>>> b25199bb2f8cb3545a05a8ead26aa4fb6d115e74
     self:PlayAnim("attack2",self.AnimTime2 / mul,false,nil,false,false)
     self:SetAttackType(2)
     self:SetLastAttack(CurTime() + self.Attack2Time / mul)
