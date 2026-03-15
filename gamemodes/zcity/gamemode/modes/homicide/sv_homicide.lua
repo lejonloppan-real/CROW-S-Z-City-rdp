@@ -1979,7 +1979,7 @@ function MODE.SpawnPlayers(spawn_with_subroles)
                             traitor_amt = traitor_amt + 1
                             
 
-                            if this_player.MainTraitor and other_ply.CurAppearance then
+                            if other_ply.CurAppearance then
                                 local Appearance = other_ply.CurAppearance
                                 local color = Appearance.AColor or color_white
                                 local name = Appearance.AName or "error"
