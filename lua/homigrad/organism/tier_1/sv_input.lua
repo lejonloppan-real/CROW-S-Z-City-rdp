@@ -556,9 +556,8 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 			victim.organism.headshot_recent = CurTime() + 0.6
 		end
 
-		-- Teeth knock-out on ragdoll blunt hits
 		if (isHead or isNeck) then
-			local chance = isHands and 5 or 20
+			local chance = 0
 			if math.random(100) <= chance then
 			local drop = ents.Create("prop_physics")
 			if IsValid(drop) then
@@ -637,9 +636,8 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 			local boneName = boneId and ent.GetBoneName and ent:GetBoneName(boneId) or nil
 			local hitgroup = boneName and hg and hg.bonetohitgroup and hg.bonetohitgroup[boneName] or nil
 			-- decerebrate handled in death ragdoll logic
-			-- Teeth knock-out on standing blunt hits
 			if hitgroup == HITGROUP_HEAD and dmgInfo:IsDamageType(DMG_CLUB) then
-				local chance = isHands and 5 or 20
+				local chance = 0
 				if math.random(100) <= chance then
 				local pos = dmgInfo:GetDamagePosition()
 				local drop = ents.Create("prop_physics")
