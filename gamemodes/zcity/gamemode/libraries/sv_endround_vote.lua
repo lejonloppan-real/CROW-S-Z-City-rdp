@@ -4,8 +4,8 @@ local votes = {}
 local cooldown = {}
 local minPlayers = 2
 local ratio = 0.6
-local voteCooldown = 20
-local minRoundTime = 600
+local voteCooldown = 3
+local minRoundTime = 120
 
 local function getEligiblePlayers()
 	local count = 0
