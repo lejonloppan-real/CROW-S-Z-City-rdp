@@ -289,6 +289,7 @@ end
 
 local function isDeadBodyAllowed(ply, owner)
 	if not IsValid(ply) then return false end
+	if engine.ActiveGamemode() ~= "zcity" then return false end
 	if ply.isTraitor then return false end
 	local mode = CurrentRound and CurrentRound() or nil
 	local modeName = mode and (mode.Type or mode.name) or nil
@@ -319,6 +320,7 @@ local deadBodyHoldUntil = 0
 local deadBodyHoldSeconds = 1.2
 hook.Add("Post Post Processing", "TunnelwaveDeadOrSuicide", function()
 	if not IsValid(lply) or not lply:Alive() then return end
+	if engine.ActiveGamemode() ~= "zcity" then return end	
 	local deadOwner = getDeadBodyOwner(lply)
 	local mode = CurrentRound and CurrentRound() or nil
 	local modeName = mode and (mode.Type or mode.name) or nil
