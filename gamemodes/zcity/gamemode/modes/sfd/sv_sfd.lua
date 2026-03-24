@@ -94,7 +94,9 @@ end
 
 MODE.LootTable = {
 	{50, {
+		{5,"weapon_bandage_sh"},
 		{4,"weapon_leadpipe"},
+		{4,"weapon_bigbandage_sh"},
 		{3,"weapon_hg_crowbar"},
 		{2,"weapon_tomahawk"},
 		{2,"weapon_hatchet"},
@@ -127,7 +129,7 @@ MODE.LootTable = {
 		{5,"weapon_hg_f1_tpik"},
 		{5,"weapon_traitor_ied"},
 		{5,"weapon_hg_slam"},
-		{5,"weapon_hg_legacy_grenade_shg"},
+		{5,"weapon_hg_rgd_tpik"},
 		{5,"weapon_hg_grenade_tpik"},
 
 		{5,"weapon_ptrd"},
