@@ -81,37 +81,6 @@ local function aprilFoolsEnabled()
 	local cvar = GetConVar("hg_aprilfools")
 	return cvar and cvar:GetBool()
 end
-if SERVER then
-	hook.Add("PlayerSpawn", "hg-aprilfools-random-dance", function(ply)
-		if not aprilFoolsEnabled() then return end
-		local now = CurTime()
-		ply.HG_AF_DanceCooldown = now + 50
-		ply.HG_AF_NextDanceCheck = now + math.Rand(10, 20)
-	end)
-
-	hook.Add("Think", "hg-aprilfools-random-dance", function()
-		if not aprilFoolsEnabled() then return end
-		local now = CurTime()
-		for _, ply in ipairs(player.GetAll()) do
-			if not IsValid(ply) or not ply:Alive() or ply:InVehicle() then continue end
-			if ply:GetNWFloat("hg_dance_until", 0) > now then continue end
-			ply.HG_AF_DanceCooldown = ply.HG_AF_DanceCooldown or 0
-			if now < ply.HG_AF_DanceCooldown then continue end
-			ply.HG_AF_NextDanceCheck = ply.HG_AF_NextDanceCheck or 0
-			if now < ply.HG_AF_NextDanceCheck then continue end
-			ply.HG_AF_NextDanceCheck = now + math.Rand(10, 20)
-			if math.random() <= 0.2 then
-				local duration = SoundDuration("bbq.wav")
-				if not duration or duration <= 0 then
-					duration = 3
-				end
-				ply:SetNWFloat("hg_dance_until", now + duration)
-				ply:EmitSound("bbq.wav", 100, 100, 1, CHAN_AUTO)
-				ply.HG_AF_DanceCooldown = now + 50
-			end
-		end
-	end)
-end
 local function reset(ply)
 	ply.manipulated = ply.manipulated or {}
 	ply.unmanipulated = {}

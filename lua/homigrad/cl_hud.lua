@@ -105,9 +105,16 @@ surface.CreateFont("HomigradFontVSmall", {
 
 local w, h
 
-hook.Add("HUDPaint", "homigrad-dev", function()
-	if engine.ActiveGamemode() ~= "sandbox" then return end
+hook.Add("HUDPaint", "homigrad-sf-hp", function()
 	w, h = ScrW(), ScrH()
+	if lply.organism and lply.organism.superfighter then
+		local hp = lply:Health()
+		local maxhp = lply:GetMaxHealth()
+		local ratio = math.Clamp(hp / maxhp, 0, 1)
+		local color = Color(255 * (1 - ratio), 255 * ratio, 0)
+		draw.SimpleText(hp, "HomigradFontGigantoNormous", 122, h - 58, Color(0, 0, 0), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		draw.SimpleText(hp, "HomigradFontGigantoNormous", 120, h - 60, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	end
 end)
 
 --draw.SimpleText(lply:Health(),"HomigradFontBig",100,h - 50,white,TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)

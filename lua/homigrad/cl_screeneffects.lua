@@ -289,6 +289,7 @@ end
 
 local function isDeadBodyAllowed(ply, owner)
 	if not IsValid(ply) then return false end
+	if engine.ActiveGamemode() ~= "zcity" then return false end
 	if ply.isTraitor then return false end
 	local mode = CurrentRound()
 	local modeName = mode and (mode.Type or mode.name) or nil
@@ -319,6 +320,7 @@ local deadBodyHoldUntil = 0
 local deadBodyHoldSeconds = 1.2
 hook.Add("Post Post Processing", "TunnelwaveDeadOrSuicide", function()
 	if not IsValid(lply) or not lply:Alive() then return end
+	if engine.ActiveGamemode() ~= "zcity" then return end	
 	local deadOwner = getDeadBodyOwner(lply)
 	local mode = CurrentRound()
 	local modeName = mode and (mode.Type or mode.name) or nil
@@ -756,6 +758,8 @@ local fatman = {
 	activeUntil = 0,
 	startedAt = 0,
 	duration = 0,
+	cooldownUntil = 0,
+	cooldownTime = 120,
 	regular = CreateMaterial("hg_fatman_regular", "UnlitGeneric", {
 		["$basetexture"] = "custom/REGULARfatman",
 		["$vertexcolor"] = "1",
@@ -779,6 +783,7 @@ hook.Add("Think", "hg-aprilfools-fatman", function()
 	if now < fatman.nextCheck then return end
 	fatman.nextCheck = now + 5
 	if now < fatman.activeUntil then return end
+	if now < fatman.cooldownUntil then return end
 	if math.random() <= 0.2 then
 		local duration = SoundDuration("fatman.wav")
 		if not duration or duration <= 0 then
@@ -787,6 +792,7 @@ hook.Add("Think", "hg-aprilfools-fatman", function()
 		fatman.duration = duration
 		fatman.startedAt = now
 		fatman.activeUntil = now + duration
+		fatman.cooldownUntil = now + fatman.cooldownTime
 		surface.PlaySound("fatman.wav")
 	end
 end)

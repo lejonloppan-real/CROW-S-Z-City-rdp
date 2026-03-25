@@ -1560,12 +1560,11 @@ local IsValid = IsValid
 			hook.Run("HG_MovementCalc", vecZero, 0, 1, ply, cmd, mv)
 			hook.Run("HG_MovementCalc_2", {1}, ply, cmd, mv)
 
-			return
-		end
-
-		if(ply:InVehicle())then
-			return
-		end
+		
+			if !hg.RagdollCombatInUse(ply) and (IsValid(ply.FakeRagdoll) or IsValid(ply:GetNWEntity("FakeRagdollOld"))) then
+				if IsValid(ply.FakeRagdoll) then
+					cmd:SetForwardMove(0)
+					cmd:SetSideMove(0)
 
 		local runnin = ply:KeyDown(IN_SPEED) and not ply:Crouching()
 

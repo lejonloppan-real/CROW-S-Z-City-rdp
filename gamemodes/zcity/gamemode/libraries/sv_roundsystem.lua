@@ -280,6 +280,7 @@ COMMANDS.bigmap = {
 zb.BigMaps = {
 	["mu_smallotown_v2_snow"] = true,
 	["mu_smallotown_v2_13"] = true,
+	["gm_bigcity_improved"] = true,
 	["mu_smallotown_v2_13_night"] = true,
 }
 

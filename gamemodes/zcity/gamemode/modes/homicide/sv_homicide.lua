@@ -1561,6 +1561,7 @@ function MODE:EndRound()
 			for _, gunner in ipairs(gunners) do
 				net.WriteEntity(gunner)
 			end
+			net.WriteInt(-1, 4)
 		net.Broadcast()
 		
 		return
@@ -1640,6 +1641,7 @@ function MODE:EndRound()
 			for _, gunner in ipairs(gunners) do
 				net.WriteEntity(gunner)
 			end
+			net.WriteInt(winner or -1, 4)
 		net.Broadcast()
 	end)
 end
